@@ -4,10 +4,12 @@ import os
 import sys
 from pathlib import Path
 
+from platformdirs import user_data_dir
+
 APP_NAME = "Mail Bot"
 PACKAGE_ROOT = Path(__file__).resolve().parent
 RESOURCE_ROOT = Path(getattr(sys, "_MEIPASS", PACKAGE_ROOT))
-USER_DATA_DIR = Path.home() / "Library" / "Application Support" / APP_NAME
+USER_DATA_DIR = Path(user_data_dir(APP_NAME, appauthor=False))
 DATA_DIR = USER_DATA_DIR
 ASSETS_DIR = RESOURCE_ROOT / "assets"
 DEFAULT_DB_PATH = DATA_DIR / "mailbot.db"

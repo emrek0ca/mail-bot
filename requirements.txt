@@ -6,3 +6,4 @@ google-generativeai
 openai
 PyMuPDF
 keyring
+platformdirs
