@@ -26,41 +26,41 @@ class HelpPanel(ctk.CTkScrollableFrame):
 
         sections = [
             (
-                "🚀 Başlangıç",
+                "Giriş",
                 "Mail Bot, Google Maps verilerini kullanarak şirketleri bulur ve AI desteği ile kişiselleştirilmiş "
                 "başvuru mailleri hazırlar. Kullanmaya başlamak için Ayarlar sekmesinden API anahtarlarınızı girin.",
             ),
             (
-                "🔑 Gemini / OpenAI API Key",
-                "• Gemini için: Google AI Studio üzerinden ücretsiz bir API anahtarı alabilirsiniz.\n"
-                "• OpenAI için: OpenAI platformu üzerinden ücretli (veya varsa kredili) anahtar alabilirsiniz.\n"
+                "Gemini / OpenAI API Key",
+                "● Gemini için: Google AI Studio üzerinden ücretsiz bir API anahtarı alabilirsiniz.\n"
+                "● OpenAI için: OpenAI platformu üzerinden anahtar alabilirsiniz.\n"
                 "Uygulama, şirketin web sitesini analiz etmek ve mail yazmak için bu zekayı kullanır.",
             ),
             (
-                "✉️ Gmail Uygulama Şifresi",
+                "Gmail Uygulama Şifresi",
                 "Gmail adresinizle mail gönderebilmek için standart şifreniz yerine 'Uygulama Şifresi' kullanmalısınız.\n"
                 "1. Google Hesabınızda 2 Adımlı Doğrulamayı açın.\n"
                 "2. Güvenlik sekmesinden 'Uygulama Şifreleri' kısmına gidin.\n"
-                "3. 'Mail' ve 'Mac/Windows' seçerek şifre üretin ve kopyalayıp Ayarlar'a yapıştırın.",
+                "3. Şifre üretin ve kopyalayıp Ayarlar'a yapıştırın.",
             ),
             (
-                "📄 CV ve Portfolyo",
+                "CV ve Portfolyo",
                 "Gönderilecek maillere otomatik olarak PDF dosyalarınızı ekleyebilirsiniz. Ayarlar'da "
-                "ana CV, ikincil CV ve portfolyo yollarını belirleyin.",
+                "dosya yollarını belirleyin.",
             ),
             (
-                "🔍 Şirket Arama",
-                "Arama sekmesinde bir sektör (örn: 'Yazılım', 'Dijital Ajans') ve bir şehir girin.\n"
-                "Uygulama şirketleri bulur, web sitelerini tarar ve sizin için bir 'Uygunluk Skoru' belirler.",
+                "Şirket Arama",
+                "Arama sekmesinde bir sektör ve şehir girin. Uygulama şirketleri bulur, "
+                "web sitelerini tarar ve sizin için bir 'Uygunluk Skoru' belirler.",
             ),
             (
-                "✅ Onay ve Gönderim",
-                "İşletmeler sekmesinde hazırlanan taslakları görebilirsiniz. Bir kayda tıklayıp 'Önizle' "
-                "diyerek maili düzenleyebilir ve onaylayabilirsiniz. 'Tüm Onaylıları Gönder' butonu ile "
-                "onayladığınız tüm mailler sırayla gönderilir.",
+                "Onay ve Gönderim",
+                "İşletmeler sekmesinde hazırlanan taslakları inceleyebilir, düzenleyebilir ve onaylayabilirsiniz. "
+                "'Tüm Onaylıları Gönder' butonu ile gönderim sürecini başlatabilirsiniz.",
             ),
         ]
 
+        last_row = 0
         for i, (head, body) in enumerate(sections):
             row = i + 1
             f = ctk.CTkFrame(self, fg_color="transparent")
@@ -83,3 +83,17 @@ class HelpPanel(ctk.CTkScrollableFrame):
                 text_color=("#566258", "#A3ADA4"),
             )
             b.grid(row=1, column=0, pady=(4, 0), sticky="w")
+            last_row = row
+
+        # Developer Signature
+        signature_frame = ctk.CTkFrame(self, fg_color="transparent")
+        signature_frame.grid(row=last_row + 1, column=0, padx=24, pady=(40, 20), sticky="ew")
+        signature_frame.grid_columnconfigure(0, weight=1)
+
+        signature = ctk.CTkLabel(
+            signature_frame,
+            text="Developed by Osman Emre Koca",
+            font=ctk.CTkFont(size=13, slant="italic"),
+            text_color=("#8B8F88", "#647067"),
+        )
+        signature.grid(row=0, column=0)
