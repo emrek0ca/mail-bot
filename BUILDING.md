@@ -1,16 +1,38 @@
-# Mail Bot Packaging
+# Mail Bot - Derleme ve Kurulum Kılavuzu
 
-## macOS `.app` build
+Mail Bot artık Windows, macOS ve Linux sistemlerini tam olarak desteklemektedir.
 
-1. Tk destekli bir Python kullanin.
-2. `./scripts/build_macos_app.sh`
-3. Cikti:
-   - `dist/Mail Bot.app`
-   - `dist/MailBot-macOS.zip`
+## 🛠️ Derleme (Build) Adımları
 
-## Notlar
+Tüm platformlarda tek bir komutla derleme yapabilirsiniz:
 
-- Uygulama veritabani ve kullanici verileri `~/Library/Application Support/Mail Bot/` altina yazilir.
-- Chromium ilk Playwright testinde veya ilk tarama aninda `~/Library/Application Support/Mail Bot/playwright-browsers/` altina otomatik kurulur.
-- Ilk acilista Ayarlar sekmesindeki servis testleriyle Gemini, Gmail ve tarayici entegrasyonlarini dogrulayin.
-- Paket PyInstaller tarafinda ad-hoc imzalanir. Apple notarization bu akista yoktur; baska bir Mac'te Gatekeeper uyarisi cikarsa sag tik -> Open ile ilk acilis yapilabilir.
+1.  Gerekli Python sürümünün (3.11+) kurulu olduğundan emin olun.
+2.  Bağımlılıkları yükleyin: `pip install -r requirements.txt`
+3.  Derleme aracını çalıştırın:
+    ```bash
+    python scripts/build.py
+    ```
+
+### Çıktılar (dist/ klasörü)
+- **Windows:** `Mail Bot.exe` (klasör içinde)
+- **macOS:** `Mail Bot.app` ve `MailBot-macOS.zip`
+- **Linux:** `Mail Bot` binary dosyası
+
+## 📂 Veri ve Ayar Konumları
+
+Uygulama, ayarları ve veritabanını işletim sisteminizin standart uygulama veri klasörlerine kaydeder:
+- **Windows:** `%LOCALAPPDATA%\Mail Bot\`
+- **macOS:** `~/Library/Application Support/Mail Bot/`
+- **Linux:** `~/.local/share/mail-bot/`
+
+Log dosyaları da (`app.log`) bu klasörlerin içinde yer alır.
+
+## ⚠️ Önemli Notlar
+
+- **Playwright:** İlk çalıştırmada tarayıcı otomatik kurulacaktır. Eğer Linux kullanıyorsanız, sistem bağımlılıkları için `sudo npx playwright install-deps` komutu gerekebilir.
+- **Tkinter:** Linux'ta `sudo apt-get install python3-tk` gerekebilir.
+- **Gmail:** Google Hesabınızda "Uygulama Şifresi" oluşturduğunuzdan emin olun. Standart şifre ile gönderim yapılamaz.
+- **Güvenlik:** API anahtarlarınız işletim sisteminin güvenli kasasında (Keychain/Credential Manager) saklanır.
+
+## 🚀 Başlangıç
+Uygulama açıldıktan sonra **Yardım** sekmesine giderek detaylı kullanım kılavuzunu inceleyebilirsiniz.

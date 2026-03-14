@@ -6,6 +6,7 @@ import customtkinter as ctk
 
 from ..app_controller import AppController
 from ..models import CompanyRecord, IntegrationCheckResult, Settings
+from .help_panel import HelpPanel
 from .log_panel import LogPanel
 from .mail_preview import MailPreviewDialog
 from .results_table import ResultsTable
@@ -19,13 +20,14 @@ class MailBotApp(ctk.CTk):
         self.controller = controller
         self._companies: dict[int, CompanyRecord] = {}
 
-        ctk.set_appearance_mode("light")
+        settings = self.controller.load_settings()
+        ctk.set_appearance_mode(settings.theme)
         ctk.set_default_color_theme("blue")
 
         self.title("Mail Bot")
         self.geometry("1220x840")
         self.minsize(1080, 760)
-        self.configure(fg_color="#EEF2EB")
+        self.configure(fg_color=("#EEF2EB", "#141814"))
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self.grid_rowconfigure(0, weight=1)
@@ -36,29 +38,35 @@ class MailBotApp(ctk.CTk):
         self.after(150, self._poll_events)
 
     def _build(self) -> None:
-        shell = ctk.CTkFrame(self, fg_color="#EEF2EB")
+        shell = ctk.CTkFrame(self, fg_color=("#EEF2EB", "#141814"))
         shell.grid(row=0, column=0, padx=18, pady=18, sticky="nsew")
         shell.grid_rowconfigure(1, weight=1)
         shell.grid_columnconfigure(0, weight=1)
 
-        title = ctk.CTkLabel(shell, text="Mail Bot", font=ctk.CTkFont(size=28, weight="bold"), text_color="#1F241E")
+        title = ctk.CTkLabel(shell, text="Mail Bot", font=ctk.CTkFont(size=28, weight="bold"), text_color=("#1F241E", "#DDE4DC"))
         title.grid(row=0, column=0, sticky="w", pady=(0, 10))
 
         self.tabs = ctk.CTkTabview(
             shell,
-            fg_color="#EEF2EB",
-            segmented_button_fg_color="#E6ECE4",
-            segmented_button_selected_color="#D8E8D7",
-            segmented_button_selected_hover_color="#C7DDC6",
-            segmented_button_unselected_color="#E6ECE4",
-            segmented_button_unselected_hover_color="#DCE5DA",
-            text_color="#2A342A",
+            fg_color=("#EEF2EB", "#141814"),
+            segmented_button_fg_color=("#E6ECE4", "#2A332B"),
+            segmented_button_selected_color=("#D8E8D7", "#3B473C"),
+            segmented_button_selected_hover_color=("#C7DDC6", "#4C5C4D"),
+            segmented_button_unselected_color=("#E6ECE4", "#2A332B"),
+            segmented_button_unselected_hover_color=("#DCE5DA", "#354035"),
+            text_color=("#2A342A", "#DDE4DC"),
             corner_radius=20,
         )
         self.tabs.grid(row=1, column=0, sticky="nsew")
         self.tabs.add("Arama")
         self.tabs.add("Isletmeler")
         self.tabs.add("Ayarlar")
+        self.tabs.add("Yardim")
+
+        self.tabs.tab("Arama").configure(fg_color=("#EEF2EB", "#141814"))
+        self.tabs.tab("Isletmeler").configure(fg_color=("#EEF2EB", "#141814"))
+        self.tabs.tab("Ayarlar").configure(fg_color=("#EEF2EB", "#141814"))
+        self.tabs.tab("Yardim").configure(fg_color=("#EEF2EB", "#141814"))
 
         search_tab = self.tabs.tab("Arama")
         search_tab.grid_rowconfigure(0, weight=0)
@@ -80,6 +88,8 @@ class MailBotApp(ctk.CTk):
             on_send_approved=self.controller.send_approved,
             on_skip=self._skip_selected,
             on_clear=self._clear_companies,
+            on_export=self.controller.export_to_csv,
+            on_approve_selected=self._approve_selected,
         )
         self.results_table.grid(row=0, column=0, sticky="nsew")
 
@@ -89,9 +99,16 @@ class MailBotApp(ctk.CTk):
         self.settings_panel = SettingsPanel(settings_tab, self._save_settings, self._run_integration_check)
         self.settings_panel.grid(row=0, column=0, sticky="nsew")
 
+        help_tab = self.tabs.tab("Yardim")
+        help_tab.grid_rowconfigure(0, weight=1)
+        help_tab.grid_columnconfigure(0, weight=1)
+        self.help_panel = HelpPanel(help_tab)
+        self.help_panel.grid(row=0, column=0, sticky="nsew")
+
     def _load_initial_state(self) -> None:
         settings = self.controller.load_settings()
         self.settings_panel.fill(settings)
+        self.search_panel.update_history(settings.search_history)
         for company in self.controller.list_companies():
             self._companies[company.id] = company
             self.results_table.upsert_company(company)
@@ -158,11 +175,29 @@ class MailBotApp(ctk.CTk):
             self.controller.reject_company(company_id, "Preview ekranindan reddedildi")
 
     def _skip_selected(self) -> None:
-        company_id = self.results_table.selected_company_id()
-        if company_id is None:
-            messagebox.showinfo("Secim", "Once bir kayit secin.")
+        company_ids = self.results_table.selected_company_ids()
+        if not company_ids:
+            messagebox.showinfo("Secim", "Once en az bir kayit secin.")
             return
-        self.controller.skip_company(company_id)
+        for cid in company_ids:
+            self.controller.skip_company(cid)
+
+    def _approve_selected(self, company_ids: list[int]) -> None:
+        if not company_ids:
+            messagebox.showinfo("Secim", "Once en az bir kayit secin.")
+            return
+        for cid in company_ids:
+            company = self.controller.get_company(cid)
+            if company and company.mail_draft:
+                self.controller.approve_company(
+                    cid,
+                    company.email or "",
+                    company.mail_subject or "",
+                    company.mail_draft,
+                    company.lead_type,
+                    company.recommended_cta,
+                )
+        messagebox.showinfo("Basarili", f"{len(company_ids)} kayit onaylandi.")
 
     def _poll_events(self) -> None:
         for event in self.controller.poll_events():
@@ -182,6 +217,8 @@ class MailBotApp(ctk.CTk):
                 self.results_table.clear()
             elif event_type == "settings_saved":
                 self.settings_panel.set_feedback("Ayarlar kaydedildi.")
+                new_settings: Settings = event["settings"]
+                self.search_panel.update_history(new_settings.search_history)
             elif event_type == "integration_check_started":
                 self.settings_panel.set_feedback(f"{event['service']} testi calisiyor...")
             elif event_type == "integration_check_finished":

@@ -31,6 +31,8 @@ SETTINGS_KEYS = (
     "expertise_areas",
     "project_highlights",
     "service_value_prop",
+    "theme",
+    "search_history",
 )
 
 COMPANY_EXTRA_COLUMNS: dict[str, str] = {
@@ -344,6 +346,10 @@ class Database:
         next_value = self.get_daily_send_count(now) + amount
         self.set_setting(key, str(next_value))
         return next_value
+
+    def list_companies_raw(self) -> list[dict[str, Any]]:
+        rows = self._connect().execute("SELECT * FROM companies ORDER BY id DESC").fetchall()
+        return [dict(row) for row in rows]
 
     def _migrate_company_columns(self, connection: sqlite3.Connection) -> None:
         existing = {row["name"] for row in connection.execute("PRAGMA table_info(companies)")}

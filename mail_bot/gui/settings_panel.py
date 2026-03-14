@@ -16,7 +16,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         on_save: Callable[[Settings], None],
         on_check: Callable[[str, Settings], None],
     ) -> None:
-        super().__init__(master, fg_color="#F7F7F2", corner_radius=22, border_width=1, border_color="#E1E4DA")
+        super().__init__(master, fg_color=("#F7F7F2", "#1E241E"), corner_radius=22, border_width=1, border_color=("#E1E4DA", "#313831"))
         self.on_save = on_save
         self.on_check = on_check
         self.grid_columnconfigure(0, weight=1)
@@ -39,6 +39,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             "github_url": tk.StringVar(),
             "linkedin_url": tk.StringVar(),
             "portfolio_url": tk.StringVar(),
+            "theme": tk.StringVar(value="System"),
         }
         self.text_values = {
             "target_roles": "",
@@ -61,7 +62,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         subtitle.grid(row=1, column=0, columnspan=2, padx=18, pady=(0, 14), sticky="w")
 
-        ctk.CTkLabel(self, text="AI Saglayicisi", text_color="#445045").grid(
+        ctk.CTkLabel(self, text="AI Saglayicisi", text_color=("#445045", "#A3ADA4")).grid(
             row=2, column=0, padx=18, pady=(0, 6), sticky="w"
         )
         provider_menu = ctk.CTkOptionMenu(
@@ -77,6 +78,24 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             dropdown_text_color="#263027",
         )
         provider_menu.grid(row=3, column=0, padx=18, pady=(0, 12), sticky="ew")
+
+        ctk.CTkLabel(self, text="Gorunum Temasi", text_color=("#445045", "#A3ADA4")).grid(
+            row=2, column=1, padx=18, pady=(0, 6), sticky="w"
+        )
+        theme_menu = ctk.CTkOptionMenu(
+            self,
+            values=["System", "Light", "Dark"],
+            variable=self.vars["theme"],
+            height=40,
+            fg_color="#E6ECE4",
+            button_color="#D8E8D7",
+            button_hover_color="#C7DDC6",
+            text_color="#263027",
+            dropdown_fg_color="#FBFBF8",
+            dropdown_text_color="#263027",
+            command=self._update_appearance_mode,
+        )
+        theme_menu.grid(row=3, column=1, padx=18, pady=(0, 12), sticky="ew")
 
         fields = [
             ("Gemini API Key", "gemini_api_key"),
@@ -95,7 +114,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         for index, (label_text, key) in enumerate(fields):
             column = index % 2
             row = 4 + (index // 2) * 2
-            ctk.CTkLabel(self, text=label_text, text_color="#445045").grid(
+            ctk.CTkLabel(self, text=label_text, text_color=("#445045", "#A3ADA4")).grid(
                 row=row, column=column, padx=18, pady=(0, 6), sticky="w"
             )
             entry = ctk.CTkEntry(
@@ -113,7 +132,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             ("Portfolio PDF", "portfolio_pdf_path", self._choose_portfolio_pdf),
         ]
         for label_text, key, command in file_fields:
-            ctk.CTkLabel(self, text=label_text, text_color="#445045").grid(row=current_row, column=0, padx=18, pady=(0, 6), sticky="w")
+            ctk.CTkLabel(self, text=label_text, text_color=("#445045", "#A3ADA4")).grid(row=current_row, column=0, padx=18, pady=(0, 6), sticky="w")
             frame = ctk.CTkFrame(self, fg_color="transparent")
             frame.grid(row=current_row + 1, column=0, columnspan=2, padx=18, pady=(0, 12), sticky="ew")
             frame.grid_columnconfigure(0, weight=1)
@@ -138,7 +157,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         for index, (label_text, key, height) in enumerate(multiline_fields):
             column = index % 2
             row = current_row + (index // 2) * 2
-            ctk.CTkLabel(self, text=label_text, text_color="#445045").grid(row=row, column=column, padx=18, pady=(0, 6), sticky="w")
+            ctk.CTkLabel(self, text=label_text, text_color=("#445045", "#A3ADA4")).grid(row=row, column=column, padx=18, pady=(0, 6), sticky="w")
             textbox = ctk.CTkTextbox(self, height=height, fg_color="#FBFBF8", text_color="#314033", corner_radius=16)
             textbox.grid(row=row + 1, column=column, padx=18, pady=(0, 12), sticky="nsew")
             self.textboxes[key] = textbox
@@ -211,6 +230,9 @@ class SettingsPanel(ctk.CTkScrollableFrame):
     def set_feedback(self, text: str) -> None:
         if self.feedback_label:
             self.feedback_label.configure(text=text)
+
+    def _update_appearance_mode(self, mode: str) -> None:
+        ctk.set_appearance_mode(mode)
 
     def _save(self) -> None:
         self.on_save(self.current_settings())

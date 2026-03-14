@@ -32,6 +32,8 @@ class Settings:
     expertise_areas: str = ""
     project_highlights: str = ""
     service_value_prop: str = ""
+    theme: str = "System"
+    search_history: str = ""
 
     @classmethod
     def from_mapping(cls, values: dict[str, Any]) -> "Settings":

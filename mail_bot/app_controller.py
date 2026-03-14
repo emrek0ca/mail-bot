@@ -84,6 +84,15 @@ class AppController:
                 self._emit("alert", level="info", message="Zaten calisan bir tarama var.")
                 return
         runtime_settings = settings or self.load_settings()
+        
+        # Update search history
+        query_str = f"{sector} | {city}".strip()
+        history = [q.strip() for q in runtime_settings.search_history.split(";") if q.strip()]
+        if query_str in history:
+            history.remove(query_str)
+        history.insert(0, query_str)
+        runtime_settings.search_history = ";".join(history[:10])
+        
         try:
             save_app_settings(runtime_settings, self.db)
             clear_all_clients()
@@ -181,6 +190,25 @@ class AppController:
             future = self._manual_email_futures.pop(company_id, None)
         if future and not future.done():
             self.runner.loop.call_soon_threadsafe(future.set_result, email.strip() if email else None)
+
+    def export_to_csv(self, file_path: str) -> None:
+        import csv
+        try:
+            data = self.db.list_companies_raw()
+            if not data:
+                self._emit("alert", level="info", message="Disa aktarilacak kayit bulunamadi.")
+                return
+            
+            headers = list(data[0].keys())
+            with open(file_path, "w", newline="", encoding="utf-8-sig") as f:
+                writer = csv.DictWriter(f, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(data)
+            
+            self._emit("log", message=f"Liste disa aktarildi: {file_path}")
+            self._emit("alert", level="info", message=f"Liste basariyla disa aktarildi:\n{file_path}")
+        except Exception as exc:
+            self._emit("alert", level="error", message=f"Disa aktarma hatasi: {exc}")
 
     def shutdown(self) -> None:
         self.runner.stop()
