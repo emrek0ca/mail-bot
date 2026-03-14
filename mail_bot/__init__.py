@@ -22,4 +22,15 @@ BROWSERS_DIR = USER_DATA_DIR / "playwright-browsers"
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 BROWSERS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Proactive permission check
+for d in [DATA_DIR, BROWSERS_DIR]:
+    if not os.access(d, os.W_OK):
+        print(f"HATA: {d} klasorune yazma yetkisi yok!", file=sys.stderr)
+
+# Linux DISPLAY check
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    if not os.environ.get("WAYLAND_DISPLAY"):
+        print("HATA: Grafik ekrani (DISPLAY) bulunamadi. GUI uygulamasi baslatilamaz.", file=sys.stderr)
+
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", str(BROWSERS_DIR))

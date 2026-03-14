@@ -5,6 +5,7 @@ import inspect
 import os
 import random
 import subprocess
+import sys
 import threading
 from pathlib import Path
 from typing import Any, Awaitable, Callable
@@ -30,9 +31,18 @@ async def search_companies(
         from playwright.async_api import TimeoutError as PlaywrightTimeoutError
         from playwright.async_api import async_playwright
     except ImportError as exc:
-        raise RuntimeError("Playwright kurulu degil. `playwright install chromium` calistirin.") from exc
+        raise RuntimeError(
+            "Playwright kurulu degil.\n"
+            "Terminalde `pip install playwright && playwright install chromium` calistirin."
+        ) from exc
 
-    await ensure_chromium_installed()
+    try:
+        await ensure_chromium_installed()
+    except Exception as exc:
+        msg = f"Tarayici (Chromium) baslatilamadi: {exc}"
+        if sys.platform.startswith("linux"):
+            msg += "\nSistem bagimliliklari eksik olabilir. 'sudo npx playwright install-deps' calistirmayi deneyin."
+        raise RuntimeError(msg) from exc
 
     results: list[dict[str, Any]] = []
     seen: set[tuple[str, str | None]] = set()
