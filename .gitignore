@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Mac OS
+.DS_Store
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+MailBot.spec
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Playwright browsers
+.playwright-browsers/
+
+# Debug files
+debug.log
+
+# pytest
+.pytest_cache/

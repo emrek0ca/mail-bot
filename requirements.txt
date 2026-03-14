@@ -1,0 +1,8 @@
+customtkinter
+playwright
+beautifulsoup4
+httpx
+google-generativeai
+openai
+PyMuPDF
+keyring
