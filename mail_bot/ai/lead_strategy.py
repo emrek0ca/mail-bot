@@ -116,22 +116,22 @@ def build_lead_strategy_prompt(
 
     return f"""
 Sen uzman bir is gelistirme, yetenek avcisi ve B2B iletisim uzmanisin.
-Amacin, asagidaki sirket verilerini analiz edip kullanici icin en uygun ulasim stratejisini belirlemek ve ayni zamanda geri donus alma ihtimali cok yuksek, kisisellestirilmis bir e-posta (konu ve govde) yazmaktir.
+Amacin, asagidaki sirket verilerini analiz edip kullanici icin en uygun ulasim stratejisini belirlemek ve ayni zamanda geri donus alma ihtimali cok yuksek, kisisellestirilmis bir e-posta (konu ve govde) yazmaktir. Kullanicinin unvani, yetenekleri ve hedeflerine bagli kalarak (sadece yazilim degil, kullanicinin meslegi neyse o meslege yonelik) sirkete deger katacak bir senaryo olustur.
 
 Gorevler:
 1. Sirketi analiz et: Ana faaliyet alani, hedef kitlesi ve olcegini kisaca ozetle (company_summary).
 2. Ulasim tipini (lead_type) sec: 
    - job: ise alim veya ekip uyumu sinyali gucluyse
-   - service: sirketin dijital ihtiyaci belirginse ve kullanici dogrudan (freelance/ajans gibi) deger sunabiliyorsa
+   - service: sirketin kullanicinin sundugu (ornek: danismanlik, freelance vb.) hizmete ihtiyaci belirginse ve kullanici dogrudan deger sunabiliyorsa
    - unclear: yeterli veri yoksa veya sinyaller karisiksa
 3. Uyum puanini (fit_score) 0-100 arasi belirle ve nedenlerini (fit_reasons) sirala.
 4. Profesyonel ve Ikna Edici bir E-posta Yaz:
    - AIDA (Attention, Interest, Desire, Action) veya PAS (Problem, Agitation, Solution) cercevelerinden birini kullanarak e-postayi olustur.
-   - Mail, sirketin ihtiyaclari ile adayin yeteneklerini dogrudan eslestirmeli.
-   - Siradan, kalip cumleler (ornegin "X tarafindaki calismalariniz dikkatimi cekti") yerine sirketin vizyonuna veya spesifik bir problemine atifta bulun.
+   - Mail, sirketin ihtiyaclari ile adayin mesleki yeteneklerini (Kullanici Profili'nde belirtilen) dogrudan eslestirmeli.
+   - Siradan, kalip cumleler yerine sirketin vizyonuna veya spesifik bir problemine atifta bulun. Eger kullanici psikolog ise psikolojik danismanlik, eger muhendis ise muhendislik cozumleri sun. Kesinlikle her kullaniciyi yazilimci/dijital ajans olarak degerlendirme.
    - Kisa, net ve profesyonel olsun.
 5. Uygun Eklentiyi Sec: Mevcut dosyalar ({attachment_options_str}) arasindan sirketin ihtiyacina en uygun olanin anahtarini (recommended_attachment_key) sec. Hepsini secmek istersen "all", hicbirini istemezsen "none" yaz.
-6. Ozel Referans Proje Onerisi (P.S. / Not): Tespit edilen teknolojilere ve sirket profiline (ornegin React kullaniyorlarsa React ile ilgili) bagli olarak kisa (1-2 cumlelik) bir ozel referans / mini-danismanlik / inceleme raporu vaadi uret (custom_ps_note). Ornek: "Not: Sitenizdeki React mimarisini inceledim, performansi %20 artirabilecek ufak bir rapor hazirladim, isterseniz paylasabilirim." Eger bulgu yoksa bos birak.
+6. Ozel Referans Proje/Hizmet Onerisi (P.S. / Not): Tespit edilen bilgilere ve sirket profiline bagli olarak kullanicinin meslegine uygun kisa (1-2 cumlelik) bir ozel referans / mini-degerlendirme / rapor vaadi uret (custom_ps_note). Ornek: "Not: Sektordeki uygulamalarinizi inceledim, {settings.user_title or 'uzmanlik alanima'} dair %20 verim artirabilecek ufak bir rapor hazirladim, isterseniz paylasabilirim." Eger bulgu yoksa bos birak.
 
 KULLANICI PROFILI:
 Ad: {settings.user_name}
@@ -267,31 +267,31 @@ def fallback_strategy(
     if lead_type == "service":
         cta = "Uygun gorurseniz size kisa bir kesif gorusmesi ve somut iyilestirme onerisi paylasabilirim."
         variant = (
-            f"Odak: {settings.expertise_areas or settings.user_title or 'yazilim gelistirme'}\n"
+            f"Odak: {settings.expertise_areas or settings.user_title or 'profesyonel hizmet'}\n"
             f"Kanıt: {recommended_reference_project}"
         )
-        value_prop = settings.service_value_prop or "Sirkete hizli deger uretecek bir yazilim iyilestirme onerisi sun."
-        routing_reason = "Dijital ihtiyac sinyali ise alim sinyalinden daha guclu."
+        value_prop = settings.service_value_prop or f"Sirkete hizli deger uretecek bir {settings.user_title or 'profesyonel'} iyilestirme onerisi sun."
+        routing_reason = "Hizmet ihtiyaci sinyali ise alim sinyalinden daha guclu."
     elif lead_type == "job":
         cta = "Uygun gorurseniz deneyimimi kisa bir gorusmede detaylandirmak isterim."
         variant = (
-            f"Odak: {settings.target_roles or settings.user_title or 'uygun teknik rol'}\n"
+            f"Odak: {settings.target_roles or settings.user_title or 'uygun rol'}\n"
             f"Kanıt: {recommended_reference_project}"
         )
-        value_prop = "Sirkete hizli adapte olup teknik katki saglayacak aday profili olustur."
+        value_prop = "Sirkete hizli adapte olup mesleki katki saglayacak aday profili olustur."
         routing_reason = "Ise alim ve ekip uyumu sinyalleri daha baskin."
     else:
         cta = "Uygun bulursaniz kisa bir tanisma gorusmesi yapabiliriz."
-        variant = f"Odak: {settings.user_title or 'genel yazilim profili'}\nKanıt: {recommended_reference_project}"
+        variant = f"Odak: {settings.user_title or 'genel profesyonel profil'}\nKanıt: {recommended_reference_project}"
         value_prop = "Hem adaylik hem hizmet tarafina acik, temkinli bir konumlama kullan."
         routing_reason = "Sinyaller karisik; kontrollu bir ilk temas onerilir."
         
     applicant = settings.user_name.strip() or "Aday"
-    mail_subject = f"Yazılım Geliştirici Başvurusu - {applicant}"
+    mail_subject = f"{settings.user_title or 'İş'} Başvurusu - {applicant}"
     if lead_type == "service":
-        mail_subject = f"Yazılım Desteği ve İş Birliği - {applicant}"
+        mail_subject = f"{settings.user_title or 'Profesyonel'} Hizmetleri ve İş Birliği - {applicant}"
         
-    mail_body = f"Merhaba,\n\n{company.name} ile ilgili arastirma yaparken dikkatimi cektiniz. Sizin gibi teknoloji odakli yapilarda deneyimimle katki saglayabilecegimi dusunuyorum.\n\n{cta}"
+    mail_body = f"Merhaba,\n\n{company.name} ile ilgili arastirma yaparken dikkatimi cektiniz. Sizin gibi vizyoner yapilarda deneyimimle katki saglayabilecegimi dusunuyorum.\n\n{cta}"
 
     return LeadStrategy(
         lead_type=lead_type,

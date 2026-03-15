@@ -11,7 +11,7 @@ def compose_mail_message(strategy: LeadStrategy, settings: Settings) -> tuple[st
     subject = strategy.mail_subject.strip()
     if not subject:
         applicant = settings.user_name.strip() or "Aday"
-        subject = f"Yazılım Geliştirici Başvurusu - {applicant}"
+        subject = f"{settings.user_title or 'Profesyonel'} Başvurusu - {applicant}"
 
     body = strategy.mail_body.strip()
     if not body:
