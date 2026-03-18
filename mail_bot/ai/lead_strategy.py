@@ -115,66 +115,48 @@ def build_lead_strategy_prompt(
     attachment_options_str = ", ".join(attachment_options) or "none"
 
     return f"""
-Sen uzman bir is gelistirme, yetenek avcisi ve B2B iletisim uzmanisin.
-Amacin, asagidaki sirket verilerini analiz edip kullanici icin en uygun ulasim stratejisini belirlemek ve ayni zamanda geri donus alma ihtimali cok yuksek, kisisellestirilmis bir e-posta (konu ve govde) yazmaktir. Kullanicinin unvani, yetenekleri ve hedeflerine bagli kalarak (sadece yazilim degil, kullanicinin meslegi neyse o meslege yonelik) sirkete deger katacak bir senaryo olustur.
+Sen dunya standartlarinda bir B2B Satis ve Is Gelistirme uzmanisin.
+Amacin, asagidaki verileri kullanarak sirkete ozel, asla 'copy-paste' oldugu anlasilmayan, dogrudan bir insan tarafindan yazilmis hissi veren bir e-posta olusturmaktır.
 
-Gorevler:
-1. Sirketi analiz et: Ana faaliyet alani, hedef kitlesi ve olcegini kisaca ozetle (company_summary).
-2. Ulasim tipini (lead_type) sec: 
-   - job: ise alim veya ekip uyumu sinyali gucluyse
-   - service: sirketin kullanicinin sundugu (ornek: danismanlik, freelance vb.) hizmete ihtiyaci belirginse ve kullanici dogrudan deger sunabiliyorsa
-   - unclear: yeterli veri yoksa veya sinyaller karisiksa
-3. Uyum puanini (fit_score) 0-100 arasi belirle ve nedenlerini (fit_reasons) sirala.
-4. Profesyonel ve Ikna Edici bir E-posta Yaz:
-   - AIDA (Attention, Interest, Desire, Action) veya PAS (Problem, Agitation, Solution) cercevelerinden birini kullanarak e-postayi olustur.
-   - Mail, sirketin ihtiyaclari ile adayin mesleki yeteneklerini (Kullanici Profili'nde belirtilen) dogrudan eslestirmeli.
-   - Siradan, kalip cumleler yerine sirketin vizyonuna veya spesifik bir problemine atifta bulun. Eger kullanici psikolog ise psikolojik danismanlik, eger muhendis ise muhendislik cozumleri sun. Kesinlikle her kullaniciyi yazilimci/dijital ajans olarak degerlendirme.
-   - Kisa, net ve profesyonel olsun.
-5. Uygun Eklentiyi Sec: Mevcut dosyalar ({attachment_options_str}) arasindan sirketin ihtiyacina en uygun olanin anahtarini (recommended_attachment_key) sec. Hepsini secmek istersen "all", hicbirini istemezsen "none" yaz.
-6. Ozel Referans Proje/Hizmet Onerisi (P.S. / Not): Tespit edilen bilgilere ve sirket profiline bagli olarak kullanicinin meslegine uygun kisa (1-2 cumlelik) bir ozel referans / mini-degerlendirme / rapor vaadi uret (custom_ps_note). Ornek: "Not: Sektordeki uygulamalarinizi inceledim, {settings.user_title or 'uzmanlik alanima'} dair %20 verim artirabilecek ufak bir rapor hazirladim, isterseniz paylasabilirim." Eger bulgu yoksa bos birak.
+STRATEJI KURALLARI:
+1. SADECE bir is basvurusu yapma; sirketin bir problemini cozmeye veya bir ihtiyacini karsilamaya odaklan.
+2. Eger 'Hiring Signal' yuksekse (is ilani varsa), o roldeki ihtiyaca atifta bulun.
+3. Eger 'Digital Need' yuksekse, sirketin dijital varligindaki (web sitesi hizi, mobil uyum, rezervasyon sistemi eksikligi vb.) bir eksigi nazikce belirt.
+4. Tespit edilen teknolojileri (Tech Stack) mutlaka mailin icinde 'deneyimim var' demek yerine 'bu yapidaki sirketlere nasil deger kattigini' anlatarak kullan.
 
-KULLANICI PROFILI:
+MAIL YAZIM KURALLARI (KRITIK):
+- KONU: Merak uyandiran, kisisel ve profesyonel olmali. Ornek: "{company.name} + {settings.user_name} | Bir Oneri", "{company.name} Ekibi Icin Ozellestirilmiş Cozum".
+- GIRIS: "Merhaba [Isim/Yetkili]" ile basla. İlk cumlede sirketin son donemdeki bir basarisina, web sitesindeki bir detaya veya sektorundeki konumuna spesifik atif yap.
+- GELISME: Sirketin su anki acisini (pain point) tahmin et ve cozumunu sun.
+- CTA: Net bir soru veya kucuk bir istek ile bitir. (Ornek: "Salı gunu 5 dakikaniz var mi?")
+- DIL: Profesyonel ama samimi. Robotik 'Sayin Yetkili' ifadelerinden mumkunse kacın (eger isim yoksa 'Ekip' de).
+
+KULLANICI PROFILI (SENIN ROLUN):
 Ad: {settings.user_name}
 Unvan: {settings.user_title}
-Hedef Roller: {settings.target_roles or "-"}
-Uzmanlik: {settings.expertise_areas or "-"}
-Projeler: {settings.project_highlights or "-"}
-Hizmet Deger Onerisi: {settings.service_value_prop or "-"}
-
-ARAMA NIYETI:
-Sektor: {search_query.sector}
-Sehir: {search_query.city}
+Uzmanlik: {settings.expertise_areas}
+Deger Onerisi: {settings.service_value_prop}
 
 SIRKET VERILERI:
 Ad: {company.name}
-Kategori: {company.category or "-"}
-Sehir: {company.city or "-"}
-Website Kazinan Metin (Ozetle 5000 karakter): {research.combined_text[:5000] or "Veri yok."}
-Hiring Signal Score: {research.hiring_signal_score}
-Digital Need Score: {research.digital_need_score}
-Decision Makers: {", ".join(research.decision_maker_candidates) or "-"}
-Tespit Edilen Teknolojiler: {", ".join(research.detected_tech_stack) or "-"}
-Dis Platformlarda Is Ilani Var mi?: {"Evet" if research.has_active_job_board_postings else "Hayir/Bilinmiyor"}
+Sektor/Kategori: {company.category}
+Web Sitesi Ozeti: {research.combined_text[:4000]}
+Tespit Edilen Teknolojiler: {", ".join(research.detected_tech_stack)}
+Sosyal Medya Linkleri: {", ".join(research.social_links or [])}
+Is Ilani Durumu: {"Aktif ilanlari var" if research.has_active_job_board_postings else "Bilinmiyor"}
+Skorlar: Hiring: {research.hiring_signal_score}, Digital Need: {research.digital_need_score}
 
-Lutfen ciktini SADECE asagidaki JSON formatinda ver. Baska hicbir aciklama metni ekleme.
-
-JSON semasi:
+Lutfen ciktini SADECE asagidaki JSON formatinda ver.
 {{
-  "company_summary": "Sirketin ana faaliyeti ve hedefleri hakkinda 2-3 cumlelik ozet.",
-  "lead_type": "job|service|unclear",
-  "fit_score": 0,
-  "fit_reasons": ["uyum nedeni 1", "uyum nedeni 2"],
-  "research_summary": "Arastirmadan cikan temel sonuc.",
-  "recommended_profile_variant": "Kullanilacak profil vurgusu",
-  "recommended_cta": "Mail sonu cagrisi",
-  "routing_reason": "Bu lead tipinin secilme nedeni",
-  "value_prop_brief": "Kisa deger onerisi",
-  "recommended_reference_project": "Onerilen referans proje",
-  "mail_subject": "Dikkat cekici ve profesyonel e-posta konusu",
-  "mail_body": "Sayin [Isim veya Yetkili],\\n\\nIcerik...\\n\\nSaygilarimla,",
-  "custom_ps_note": "Not: ... (varsa)",
-  "recommended_attachment_key": "primary_cv|secondary_cv|portfolio|all|none"
+  "company_summary": "Sirketin ne yaptigina dair derin analiz.",
+  "lead_type": "job|service",
+  "fit_score": 0-100,
+  "fit_reasons": ["spesifik neden 1", "spesifik neden 2"],
+  "mail_subject": "Tiklanma orani yuksek konu basligi",
+  "mail_body": "Kisisellestirilmis mail govdesi...",
+  "recommended_attachment_key": "primary_cv|portfolio|all"
 }}
+""".strip()
 """.strip()
 
 

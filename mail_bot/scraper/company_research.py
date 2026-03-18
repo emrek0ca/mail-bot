@@ -122,6 +122,7 @@ class ResearchBundle:
     detected_tech_stack: list[str]
     has_active_job_board_postings: bool
     weak_signal: bool
+    social_links: list[str] = None
 
 
 def reject_company_candidate(company: dict[str, str | None], query: SearchQuery) -> str | None:
@@ -164,6 +165,7 @@ async def _check_job_boards(company_name: str) -> bool:
 
 
 async def enrich_company_website(url: str | None, company_name: str | None = None) -> ResearchBundle:
+    import asyncio
     has_jobs = await _check_job_boards(company_name) if company_name else False
     if not url:
         return ResearchBundle([], {}, "", 0, 0, "bilinmiyor", [], [], has_jobs, True)
@@ -173,21 +175,28 @@ async def enrich_company_website(url: str | None, company_name: str | None = Non
     page_texts: dict[str, str] = {}
     decision_makers: list[str] = []
     detected_tech = set()
+    social_links = set()
 
     async with httpx.AsyncClient(timeout=8.0, follow_redirects=True, headers=_headers()) as client:
+        tasks = []
         for name, suffix in PAGE_PATHS.items():
             page_url = normalized if not suffix else urljoin(normalized.rstrip("/") + "/", suffix.lstrip("/"))
-            if page_url in visited_urls:
+            tasks.append(_process_page(client, page_url, name))
+
+        results = await asyncio.gather(*tasks)
+        for page_url, name, html_content in results:
+            if not html_content:
                 continue
-            try:
-                response = await client.get(page_url)
-                response.raise_for_status()
-            except Exception:
-                continue
-            visited_urls.append(page_url)
             
-            html_content = response.text
+            visited_urls.append(page_url)
             lowered_html = html_content.lower()
+
+            # Sosyal medya link tespiti
+            for platform in ("linkedin.com", "instagram.com", "facebook.com", "twitter.com", "github.com", "x.com"):
+                matches = re.findall(rf'https?://(?:www\.)?{platform}/[a-zA-Z0-9._/-]+', html_content)
+                for m in matches:
+                    social_links.add(m.rstrip("/").split("?")[0])
+
             for tech, footprints in TECH_STACK_FOOTPRINTS.items():
                 if any(fp in lowered_html for fp in footprints):
                     detected_tech.add(tech)
@@ -216,7 +225,21 @@ async def enrich_company_website(url: str | None, company_name: str | None = Non
         detected_tech_stack=sorted(list(detected_tech)),
         has_active_job_board_postings=has_jobs,
         weak_signal=weak_signal,
+        social_links=sorted(list(social_links))[:10],
     )
+
+
+async def _process_page(client: httpx.AsyncClient, url: str, name: str) -> tuple[str, str, str | None]:
+    for attempt in range(2):
+        try:
+            response = await client.get(url)
+            response.raise_for_status()
+            return url, name, response.text
+        except Exception:
+            if attempt == 0:
+                await asyncio.sleep(1.0)
+            continue
+    return url, name, None
 
 
 def _extract_page_insights(html: str) -> tuple[str, list[str]]:

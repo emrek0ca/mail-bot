@@ -215,7 +215,8 @@ class AppController:
         self.db.close()
 
     async def log(self, message: str) -> None:
-        self._emit("log", message=message)
+        now = datetime.now().strftime("%H:%M:%S")
+        self._emit("log", message=f"[{now}] {message}")
 
     async def refresh_company(self, company_id: int) -> None:
         self._emit_company(company_id)
@@ -255,26 +256,42 @@ class AppController:
             )
 
         try:
+            now_str = datetime.now().strftime("%H:%M:%S")
             self._emit(
                 "log",
-                message=f"AI saglayicisi: {settings.active_provider_label} | Model: {settings.active_model}",
+                message=f"[{now_str}] AI saglayicisi: {settings.active_provider_label} | Model: {settings.active_model}",
             )
             ai_check = await check_ai(settings)
             if not ai_check.ok:
                 self._emit("search_state", message="Tarama baslamadi. AI ayari gecersiz.", progress=0.0)
                 self._emit("alert", level="error", message=ai_check.message)
-                self._emit("log", message=f"AI preflight hatasi: {ai_check.message}")
+                self._emit("log", message=f"[{datetime.now().strftime('%H:%M:%S')}] AI preflight hatasi: {ai_check.message}")
                 return
             await search_companies(query, on_company=on_company)
-            self._emit("log", message=f"Taranan sirket sayisi: {len(company_ids)}")
-            total = max(len(company_ids), 1)
-            for index, company_id in enumerate(company_ids, start=1):
-                self._emit(
-                    "search_state",
-                    message=f"Sirketler hazirlaniyor ({index}/{total})",
-                    progress=min(index / total, 1.0),
-                )
-                await process_company(company_id, settings, self.db, self, query)
+            self._emit("log", message=f"[{datetime.now().strftime('%H:%M:%S')}] Taranan sirket sayisi: {len(company_ids)}")
+            
+            total = len(company_ids)
+            if total > 0:
+                semaphore = asyncio.Semaphore(5)
+                processed_count = 0
+
+                async def _process_with_semaphore(cid: int, idx: int):
+                    nonlocal processed_count
+                    async with semaphore:
+                        await process_company(cid, settings, self.db, self, query)
+                        processed_count += 1
+                        self._emit(
+                            "search_state",
+                            message=f"Sirketler hazirlaniyor ({processed_count}/{total})",
+                            progress=min(processed_count / total, 1.0),
+                        )
+
+                tasks = [
+                    _process_with_semaphore(company_id, i) 
+                    for i, company_id in enumerate(company_ids, start=1)
+                ]
+                await asyncio.gather(*tasks)
+
             self._emit("search_state", message="Tarama ve taslak hazirlama tamamlandi.", progress=1.0)
         except Exception as exc:
             self._emit("search_state", message=f"Islem durdu: {exc}", progress=0.0)

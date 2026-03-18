@@ -154,11 +154,11 @@ def _install_chromium() -> None:
 
 async def _extract_company(page: Any, fallback_city: str) -> dict[str, Any]:
     return {
-        "name": await _text(page, ('h1.DUwDvf', '[data-attrid="title"]')),
-        "address": await _text(page, ('button[data-item-id="address"]', '[data-item-id="address"]')),
-        "phone": await _text(page, ('button[data-item-id^="phone"]', '[data-item-id^="phone"]')),
-        "website": await _attr(page, ('a[data-item-id="authority"]',), "href"),
-        "category": await _text(page, ('button[jsaction*="pane.rating.category"]', 'span.DkEaL')),
+        "name": await _text(page, ('h1.DUwDvf', 'div.fontHeadlineLarge', '[data-attrid="title"]', 'h1 span')),
+        "address": await _text(page, ('button[data-item-id="address"]', 'div.Io6YTe.fontBodyMedium', '[data-item-id="address"]')),
+        "phone": await _text(page, ('button[data-item-id^="phone"]', 'button[data-tooltip*="Telefon"]', 'div.QSv61c')),
+        "website": await _attr(page, ('a[data-item-id="authority"]', 'a[aria-label*="Web sitesi"]', 'a[href*="http"]'), "href"),
+        "category": await _text(page, ('button[jsaction*="pane.rating.category"]', 'span.DkEaL', 'div.fontBodyMedium span')),
         "city": fallback_city,
     }
 

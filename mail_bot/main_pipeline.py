@@ -156,7 +156,7 @@ async def process_company(
         if not company:
             return
 
-        subject, body = compose_mail_message(strategy, config)
+        subject, body = compose_mail_message(strategy, config, company)
         db.update_company(company_id, mail_subject=subject, mail_draft=body, error_message=None)
         db.add_interaction(company_id, "draft_ready", strategy.lead_type)
         

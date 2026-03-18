@@ -4,16 +4,35 @@ from ..models import CompanyRecord, Settings
 from .lead_strategy import LeadStrategy
 
 
-def compose_mail_message(strategy: LeadStrategy, settings: Settings) -> tuple[str, str]:
+def compose_mail_message(strategy: LeadStrategy, settings: Settings, company: CompanyRecord | None = None) -> tuple[str, str]:
     """
-    Yapay zekanin urettigi mail subject ve body'yi alir, kullanici imzasini ekleyerek dondurur.
+    Yapay zekanin urettigi mail subject ve body'yi alir, placeholder'lari temizler
+    ve kullanici imzasini ekleyerek dondurur.
     """
     subject = strategy.mail_subject.strip()
+    body = strategy.mail_body.strip()
+
+    # Placeholder temizleme (AI bazen unutabiliyor)
+    if company:
+        placeholders = {
+            "[Sirket Adi]": company.name,
+            "[Şirket Adı]": company.name,
+            "[Sirket]": company.name,
+            "{company_name}": company.name,
+            "[Isim]": "Yetkili",
+            "[İsim]": "Yetkili",
+            "[Yetkili]": "Yetkili",
+            "[Adiniz]": settings.user_name,
+            "[Adınız]": settings.user_name,
+        }
+        for key, val in placeholders.items():
+            subject = subject.replace(key, val)
+            body = body.replace(key, val)
+
     if not subject:
         applicant = settings.user_name.strip() or "Aday"
         subject = f"{settings.user_title or 'Profesyonel'} Başvurusu - {applicant}"
 
-    body = strategy.mail_body.strip()
     if not body:
         body = "Merhaba,\n\nEkteki ozgecmisimi inceleyebilirsiniz.\n\nIyi calismalar."
 

@@ -29,10 +29,16 @@ def save_settings(settings: Settings, db: Database | None = None) -> None:
     database.init_db()
     stored_values = settings.as_mapping()
     try:
+        # Secret'lari guvenli depoya kaydetmeyi dene
         save_secrets({key: getattr(settings, key) for key in SECRET_KEYS})
+        # Eger basariliysa, DB'de bos birak (guvenlik icin)
+        # NOT: Sadece deger gercekten varsa ve kaydedildiyse DB'den temizliyoruz
         for key in SECRET_KEYS:
-            stored_values[key] = ""
+            val = getattr(settings, key, "").strip()
+            if val:
+                stored_values[key] = ""
     except SecureStoreError:
+        # Keyring hatasi varsa DB'deki veriyi oldugu gibi birak
         for key in SECRET_KEYS:
             stored_values[key] = getattr(settings, key)
     database.save_settings(Settings.from_mapping(stored_values))

@@ -102,12 +102,13 @@ def guess_email_from_domain(website: str) -> str | None:
     domain = parsed.netloc.lower().removeprefix("www.")
     if not domain:
         return None
-    guesses = (
+    # En olasi tahminleri siraliyoruz
+    guesses = [
         f"info@{domain}",
         f"contact@{domain}",
         f"iletisim@{domain}",
         f"bilgi@{domain}",
-    )
+    ]
     return guesses[0]
 
 

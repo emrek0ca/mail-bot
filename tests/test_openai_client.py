@@ -71,7 +71,7 @@ class OpenAIClientTests(unittest.IsolatedAsyncioTestCase):
             user_phone="05551234567",
             linkedin_url="https://linkedin.com/in/emrekoca",
         )
-        subject, body = compose_mail_message(strategy, settings)
+        subject, body = compose_mail_message(strategy, settings, None)
         self.assertEqual(subject, "Test Konusu")
         self.assertIn("Test Govdesi", body)
         self.assertIn("Emre Koca", body)

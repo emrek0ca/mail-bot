@@ -29,3 +29,12 @@ debug.log
 
 # pytest
 .pytest_cache/
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
+
+# Remotion video output
+video-output/
+videos/.remotion/
